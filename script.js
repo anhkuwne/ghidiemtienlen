@@ -1,16 +1,16 @@
 // ============================
-// CASINO TIẾN LÊN SCORE SYSTEM
+// TIẾN LÊN SCORE SYSTEM
+// Minimalist Version
 // Tác giả: Cư
-// Mobile Optimized
 // ============================
 
-class CasinoScoreSystem {
+class ScoreSystem {
     constructor() {
         this.players = {
-            top: { name: '', total: 0, currentRound: 0, ranks: [] },
-            right: { name: '', total: 0, currentRound: 0, ranks: [] },
-            bottom: { name: '', total: 0, currentRound: 0, ranks: [] },
-            left: { name: '', total: 0, currentRound: 0, ranks: [] }
+            top: { name: '', total: 0, currentRound: 0 },
+            right: { name: '', total: 0, currentRound: 0 },
+            bottom: { name: '', total: 0, currentRound: 0 },
+            left: { name: '', total: 0, currentRound: 0 }
         };
         
         this.gameHistory = [];
@@ -32,13 +32,8 @@ class CasinoScoreSystem {
     }
     
     bindEvents() {
-        // Setup modal
+        // Setup
         document.getElementById('startGame').addEventListener('click', () => this.startGameSetup());
-        
-        // Timer controls
-        document.getElementById('startTimer').addEventListener('click', () => this.startTimer());
-        document.getElementById('pauseTimer').addEventListener('click', () => this.pauseTimer());
-        document.getElementById('resetTimer').addEventListener('click', () => this.resetTimer());
         
         // Player chips click
         this.positions.forEach(pos => {
@@ -52,7 +47,6 @@ class CasinoScoreSystem {
         document.getElementById('undoRound').addEventListener('click', () => this.undoLastRound());
         document.getElementById('showHistory').addEventListener('click', () => this.toggleHistoryPanel());
         document.getElementById('resetGame').addEventListener('click', () => this.resetGame());
-        document.getElementById('quickConfirm').addEventListener('click', () => this.quickConfirmRound());
         
         // Panel toggle
         document.getElementById('togglePanel').addEventListener('click', () => this.toggleHistoryPanel());
@@ -93,7 +87,6 @@ class CasinoScoreSystem {
             this.players[pos].name = names[pos];
             this.players[pos].total = 0;
             this.players[pos].currentRound = 0;
-            this.players[pos].ranks = [];
         });
         
         // Update UI
@@ -106,6 +99,9 @@ class CasinoScoreSystem {
         
         // Hide setup modal
         document.getElementById('setupModal').classList.remove('active');
+        
+        // Start timer
+        this.startTimer();
         
         // Start first round
         this.startNewRound();
@@ -139,10 +135,6 @@ class CasinoScoreSystem {
         
         // Update UI
         this.updateAllDisplays();
-        this.resetRankIndicators();
-        
-        // Start timer
-        this.startTimer();
         
         this.showNotification(`🎯 Ván ${this.currentRound} đã bắt đầu!`, 'info');
     }
@@ -179,7 +171,6 @@ class CasinoScoreSystem {
         
         // Update UI
         playerChip.classList.add('selected');
-        this.updateRankIndicator(position, rank, true);
         this.updateAllDisplays();
         
         // Check if ready for confirmation
@@ -197,7 +188,6 @@ class CasinoScoreSystem {
                     points: this.rankPoints[4] 
                 });
                 
-                this.updateRankIndicator(remainingPos, 4, true);
                 this.updateAllDisplays();
                 
                 // Auto-show confirm modal
@@ -221,7 +211,6 @@ class CasinoScoreSystem {
         
         // Update UI
         document.querySelector(`.player-chip[data-position="${position}"]`).classList.remove('selected');
-        this.updateRankIndicator(position, removedRank, false);
         
         // Reassign ranks to remaining selected players
         this.selectedRanks.sort((a, b) => a.rank - b.rank);
@@ -230,21 +219,9 @@ class CasinoScoreSystem {
             selection.rank = newRank;
             selection.points = this.rankPoints[newRank];
             this.players[selection.position].currentRound = selection.points;
-            
-            // Update rank indicator
-            this.updateRankIndicator(selection.position, newRank, true);
         });
         
         this.updateAllDisplays();
-    }
-    
-    quickConfirmRound() {
-        if (this.selectedRanks.length !== 4) {
-            this.showNotification('⚠️ Vui lòng chọn đủ 3 hạng đầu tiên!', 'warning');
-            return;
-        }
-        
-        this.showConfirmModal();
     }
     
     showConfirmModal() {
@@ -260,11 +237,8 @@ class CasinoScoreSystem {
             const inputElement = document.querySelector(`.score-input-modal[data-position="${pos}"]`);
             if (selection) {
                 inputElement.value = selection.points;
-                document.getElementById(`expected${this.capitalize(pos)}`).textContent = 
-                    `Mặc định: ${selection.points}`;
             } else {
                 inputElement.value = 0;
-                document.getElementById(`expected${this.capitalize(pos)}`).textContent = 'Mặc định: 0';
             }
         });
         
@@ -293,9 +267,6 @@ class CasinoScoreSystem {
             const input = document.querySelector(`.score-input-modal[data-position="${selection.position}"]`);
             input.value = selection.points;
             this.players[selection.position].currentRound = selection.points;
-            
-            document.getElementById(`expected${this.capitalize(selection.position)}`).textContent = 
-                `Mặc định: ${selection.points}`;
         });
         
         this.showNotification('✨ Đã điền điểm tự động!', 'success');
@@ -317,8 +288,7 @@ class CasinoScoreSystem {
         // Add to history
         const roundData = {
             round: this.currentRound,
-            timestamp: new Date().toLocaleString('vi-VN'),
-            duration: this.formatTime(this.timer.seconds),
+            duration: this.formatTime(this.getRoundDuration()),
             scores: {},
             ranks: {}
         };
@@ -335,7 +305,6 @@ class CasinoScoreSystem {
         // Reset for next round
         this.roundInProgress = false;
         this.selectedRanks = [];
-        this.pauseTimer();
         
         // Update UI
         this.updateAllDisplays();
@@ -344,6 +313,12 @@ class CasinoScoreSystem {
         
         this.showNotification(`✅ Ván ${roundData.round} đã lưu!`, 'success');
         this.saveToLocalStorage();
+    }
+    
+    getRoundDuration() {
+        // Simple duration - 30 seconds per round for demo
+        // In real app, you'd track actual time
+        return 30;
     }
     
     undoLastRound() {
@@ -359,7 +334,6 @@ class CasinoScoreSystem {
         // Subtract scores
         this.positions.forEach(pos => {
             this.players[pos].total -= lastRound.scores[pos];
-            this.players[pos].ranks.pop();
         });
         
         // Remove from history
@@ -378,7 +352,7 @@ class CasinoScoreSystem {
         if (!confirm('⚠️ XÓA TẤT CẢ DỮ LIỆU?\nHành động này không thể hoàn tác!')) return;
         
         this.positions.forEach(pos => {
-            this.players[pos] = { name: '', total: 0, currentRound: 0, ranks: [] };
+            this.players[pos] = { name: '', total: 0, currentRound: 0 };
         });
         
         this.gameHistory = [];
@@ -443,7 +417,7 @@ class CasinoScoreSystem {
         if (hours > 0) {
             return `${hours}h${minutes}m`;
         } else if (minutes > 0) {
-            return `${minutes}m${secs}s`;
+            return `${minutes}m`;
         } else {
             return `${secs}s`;
         }
@@ -485,44 +459,13 @@ class CasinoScoreSystem {
         });
     }
     
-    updateRankIndicator(position, rank, active) {
-        const indicator = document.querySelector(`.player-spot[data-position="${position}"] .rank-indicator[data-rank="${rank}"]`);
-        if (indicator) {
-            if (active) {
-                indicator.classList.add('active');
-            } else {
-                indicator.classList.remove('active');
-            }
-        }
-    }
-    
-    resetRankIndicators() {
-        document.querySelectorAll('.rank-indicator').forEach(indicator => {
-            indicator.classList.remove('active');
-        });
-        
-        document.querySelectorAll('.player-chip').forEach(chip => {
-            chip.classList.remove('selected');
-        });
-    }
-    
     // ============================
     // HISTORY PANEL
     // ============================
     
     toggleHistoryPanel() {
         const panel = document.getElementById('scorePanel');
-        const toggleBtn = document.getElementById('togglePanel');
-        
         panel.classList.toggle('open');
-        
-        if (panel.classList.contains('open')) {
-            toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-            toggleBtn.style.transform = 'rotate(180deg)';
-        } else {
-            toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-            toggleBtn.style.transform = 'rotate(0deg)';
-        }
     }
     
     addHistoryRow(roundData) {
@@ -531,33 +474,22 @@ class CasinoScoreSystem {
         
         row.innerHTML = `
             <td><strong>${roundData.round}</strong></td>
-            <td>${roundData.timestamp}<br><small>${roundData.duration}</small></td>
-            <td class="score-cell ${roundData.ranks.top === 1 ? 'first' : roundData.ranks.top === 2 ? 'second' : roundData.ranks.top === 3 ? 'third' : ''}">
+            <td>${roundData.duration}</td>
+            <td class="${roundData.ranks.top === 1 ? 'first' : roundData.ranks.top === 2 ? 'second' : roundData.ranks.top === 3 ? 'third' : ''}">
                 ${roundData.scores.top}
             </td>
-            <td class="score-cell ${roundData.ranks.right === 1 ? 'first' : roundData.ranks.right === 2 ? 'second' : roundData.ranks.right === 3 ? 'third' : ''}">
+            <td class="${roundData.ranks.right === 1 ? 'first' : roundData.ranks.right === 2 ? 'second' : roundData.ranks.right === 3 ? 'third' : ''}">
                 ${roundData.scores.right}
             </td>
-            <td class="score-cell ${roundData.ranks.bottom === 1 ? 'first' : roundData.ranks.bottom === 2 ? 'second' : roundData.ranks.bottom === 3 ? 'third' : ''}">
+            <td class="${roundData.ranks.bottom === 1 ? 'first' : roundData.ranks.bottom === 2 ? 'second' : roundData.ranks.bottom === 3 ? 'third' : ''}">
                 ${roundData.scores.bottom}
             </td>
-            <td class="score-cell ${roundData.ranks.left === 1 ? 'first' : roundData.ranks.left === 2 ? 'second' : roundData.ranks.left === 3 ? 'third' : ''}">
+            <td class="${roundData.ranks.left === 1 ? 'first' : roundData.ranks.left === 2 ? 'second' : roundData.ranks.left === 3 ? 'third' : ''}">
                 ${roundData.scores.left}
-            </td>
-            <td>
-                <button class="delete-round" data-round="${roundData.round}">
-                    <i class="fas fa-trash"></i> Xóa
-                </button>
             </td>
         `;
         
         tbody.insertBefore(row, tbody.firstChild);
-        
-        // Add event listener to delete button
-        row.querySelector('.delete-round').addEventListener('click', (e) => {
-            const roundToDelete = parseInt(e.target.closest('.delete-round').dataset.round);
-            this.deleteRound(roundToDelete);
-        });
         
         // Update totals
         this.updateTotals();
@@ -578,29 +510,6 @@ class CasinoScoreSystem {
         });
     }
     
-    deleteRound(roundNumber) {
-        const roundIndex = this.gameHistory.findIndex(r => r.round === roundNumber);
-        if (roundIndex === -1) return;
-        
-        if (!confirm(`Xóa ván ${roundNumber}?`)) return;
-        
-        // Subtract scores
-        const round = this.gameHistory[roundIndex];
-        this.positions.forEach(pos => {
-            this.players[pos].total -= round.scores[pos];
-        });
-        
-        // Remove from history
-        this.gameHistory.splice(roundIndex, 1);
-        
-        // Update UI
-        this.updateAllDisplays();
-        this.removeHistoryRow(roundIndex);
-        
-        this.showNotification(`🗑️ Đã xóa ván ${roundNumber}!`, 'info');
-        this.saveToLocalStorage();
-    }
-    
     // ============================
     // NOTIFICATION SYSTEM
     // ============================
@@ -609,16 +518,14 @@ class CasinoScoreSystem {
         const notification = document.getElementById('notification');
         const icons = {
             success: 'fas fa-check-circle',
-            error: 'fas fa-exclamation-circle',
             warning: 'fas fa-exclamation-triangle',
             info: 'fas fa-info-circle'
         };
         
         const colors = {
-            success: 'linear-gradient(45deg, #2ecc71, #27ae60)',
-            error: 'linear-gradient(45deg, #e74c3c, #c0392b)',
-            warning: 'linear-gradient(45deg, #f39c12, #e67e22)',
-            info: 'linear-gradient(45deg, #3498db, #2980b9)'
+            success: 'linear-gradient(135deg, #48bb78, #38a169)',
+            warning: 'linear-gradient(135deg, #ed8936, #dd6b20)',
+            info: 'linear-gradient(135deg, #4299e1, #3182ce)'
         };
         
         notification.innerHTML = `
@@ -648,11 +555,11 @@ class CasinoScoreSystem {
             timer: this.timer
         };
         
-        localStorage.setItem('casinoScoreData', JSON.stringify(data));
+        localStorage.setItem('scoreData', JSON.stringify(data));
     }
     
     loadFromLocalStorage() {
-        const saved = localStorage.getItem('casinoScoreData');
+        const saved = localStorage.getItem('scoreData');
         if (!saved) return;
         
         try {
@@ -684,14 +591,21 @@ class CasinoScoreSystem {
             // If round was in progress, restore selections
             if (this.roundInProgress) {
                 this.selectedRanks.forEach(selection => {
-                    this.updateRankIndicator(selection.position, selection.rank, true);
                     document.querySelector(`.player-chip[data-position="${selection.position}"]`).classList.add('selected');
                 });
             }
             
+            // If game was started, hide setup modal
+            if (this.players.top.name) {
+                document.getElementById('setupModal').classList.remove('active');
+                if (this.timer.running) {
+                    this.startTimer();
+                }
+            }
+            
         } catch (error) {
             console.error('Error loading saved data:', error);
-            localStorage.removeItem('casinoScoreData');
+            localStorage.removeItem('scoreData');
         }
     }
     
@@ -706,5 +620,5 @@ class CasinoScoreSystem {
 
 // Initialize the game when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    window.casinoGame = new CasinoScoreSystem();
+    window.scoreSystem = new ScoreSystem();
 });

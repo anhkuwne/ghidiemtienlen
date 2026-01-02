@@ -3,84 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TIẾN LÊN CASINO - Score Tracker</title>
+    <title>TIẾN LÊN</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="casino-container">
-        <!-- Header với timer -->
+        <!-- Header -->
         <header class="casino-header">
             <div class="casino-logo">
-                <i class="fas fa-arrow-up"></i>
-                <h1>TIẾN LÊN <span class="highlight">CASINO</span></h1>
-                <div class="author">
-                    <i class="fas fa-user-edit"></i> Tác giả: <span class="author-name">Cư</span>
-                </div>
+                <i class="fas fa-cards"></i>
+                <h1>TIẾN LÊN</h1>
+                <div class="author">Tác giả: <span class="author-name">Cư</span></div>
             </div>
             <div class="timer-container">
                 <i class="fas fa-clock"></i>
                 <div class="timer-display" id="timer">00:00:00</div>
-                <div class="timer-controls">
-                    <button id="startTimer" class="timer-btn"><i class="fas fa-play"></i></button>
-                    <button id="pauseTimer" class="timer-btn"><i class="fas fa-pause"></i></button>
-                    <button id="resetTimer" class="timer-btn"><i class="fas fa-redo"></i></button>
-                </div>
             </div>
         </header>
 
-        <!-- Bảng tổng điểm -->
+        <!-- Player Summary -->
         <div class="player-summary">
             <div class="summary-card" id="summaryTop">
                 <div class="summary-name">-</div>
                 <div class="summary-total">0</div>
-                <div class="summary-label">Tổng điểm</div>
             </div>
             <div class="summary-card" id="summaryRight">
                 <div class="summary-name">-</div>
                 <div class="summary-total">0</div>
-                <div class="summary-label">Tổng điểm</div>
             </div>
             <div class="summary-card" id="summaryBottom">
                 <div class="summary-name">-</div>
                 <div class="summary-total">0</div>
-                <div class="summary-label">Tổng điểm</div>
             </div>
             <div class="summary-card" id="summaryLeft">
                 <div class="summary-name">-</div>
                 <div class="summary-total">0</div>
-                <div class="summary-label">Tổng điểm</div>
             </div>
         </div>
 
-        <!-- Khu vực bàn chơi -->
+        <!-- Game Area -->
         <div class="game-area">
-            <!-- Vòng tròn trung tâm -->
+            <!-- Center Table -->
             <div class="center-table">
                 <div class="table-center">
-                    <div class="pot-label">
-                        <i class="fas fa-coins"></i>
-                        <span>TỔNG</span>
-                    </div>
                     <div class="pot-total" id="potTotal">0</div>
-                    <button id="quickConfirm" class="pot-button">
-                        <i class="fas fa-bolt"></i> XÁC NHẬN
-                    </button>
                 </div>
             </div>
 
-            <!-- 4 vị trí người chơi -->
+            <!-- 4 Players -->
             <div class="table-position top-position" data-position="top">
                 <div class="player-spot" id="spotTop">
                     <div class="player-chip" data-position="top">
                         <div class="chip-name" id="nameTop">TRÊN</div>
                         <div class="chip-score" id="currentScoreTop">0</div>
-                    </div>
-                    <div class="rank-indicators">
-                        <div class="rank-indicator" data-rank="1"><i class="fas fa-crown"></i></div>
-                        <div class="rank-indicator" data-rank="2"><i class="fas fa-star"></i></div>
-                        <div class="rank-indicator" data-rank="3"><i class="fas fa-award"></i></div>
                     </div>
                 </div>
             </div>
@@ -91,11 +67,6 @@
                         <div class="chip-name" id="nameRight">PHẢI</div>
                         <div class="chip-score" id="currentScoreRight">0</div>
                     </div>
-                    <div class="rank-indicators">
-                        <div class="rank-indicator" data-rank="1"><i class="fas fa-crown"></i></div>
-                        <div class="rank-indicator" data-rank="2"><i class="fas fa-star"></i></div>
-                        <div class="rank-indicator" data-rank="3"><i class="fas fa-award"></i></div>
-                    </div>
                 </div>
             </div>
 
@@ -104,11 +75,6 @@
                     <div class="player-chip" data-position="bottom">
                         <div class="chip-name" id="nameBottom">DƯỚI</div>
                         <div class="chip-score" id="currentScoreBottom">0</div>
-                    </div>
-                    <div class="rank-indicators">
-                        <div class="rank-indicator" data-rank="1"><i class="fas fa-crown"></i></div>
-                        <div class="rank-indicator" data-rank="2"><i class="fas fa-star"></i></div>
-                        <div class="rank-indicator" data-rank="3"><i class="fas fa-award"></i></div>
                     </div>
                 </div>
             </div>
@@ -119,18 +85,13 @@
                         <div class="chip-name" id="nameLeft">TRÁI</div>
                         <div class="chip-score" id="currentScoreLeft">0</div>
                     </div>
-                    <div class="rank-indicators">
-                        <div class="rank-indicator" data-rank="1"><i class="fas fa-crown"></i></div>
-                        <div class="rank-indicator" data-rank="2"><i class="fas fa-star"></i></div>
-                        <div class="rank-indicator" data-rank="3"><i class="fas fa-award"></i></div>
-                    </div>
                 </div>
             </div>
 
-            <!-- Nút điều khiển chính -->
+            <!-- Action Buttons -->
             <div class="action-buttons">
                 <button id="startRound" class="action-btn primary">
-                    <i class="fas fa-play-circle"></i> BẮT ĐẦU
+                    <i class="fas fa-play"></i> BẮT ĐẦU
                 </button>
                 <button id="undoRound" class="action-btn warning">
                     <i class="fas fa-undo"></i> HOÀN TÁC
@@ -139,139 +100,113 @@
                     <i class="fas fa-history"></i> LỊCH SỬ
                 </button>
                 <button id="resetGame" class="action-btn danger">
-                    <i class="fas fa-trash"></i> XÓA HẾT
+                    <i class="fas fa-trash"></i> XÓA
                 </button>
             </div>
         </div>
 
-        <!-- Panel lịch sử -->
+        <!-- History Panel -->
         <div class="score-panel" id="scorePanel">
             <div class="panel-header">
-                <h3><i class="fas fa-table"></i> LỊCH SỬ VÁN</h3>
+                <h3><i class="fas fa-list"></i> LỊCH SỬ</h3>
                 <button id="togglePanel" class="panel-toggle">
-                    <i class="fas fa-chevron-right"></i>
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="panel-content">
-                <div class="excel-table-container">
-                    <table class="excel-table" id="historyTable">
-                        <thead>
-                            <tr>
-                                <th>VÁN</th>
-                                <th>THỜI GIAN</th>
-                                <th id="colTop">-</th>
-                                <th id="colRight">-</th>
-                                <th id="colBottom">-</th>
-                                <th id="colLeft">-</th>
-                                <th>HÀNH ĐỘNG</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyBody"></tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td colspan="2"><strong>TỔNG:</strong></td>
-                                <td id="totalTop">0</td>
-                                <td id="totalRight">0</td>
-                                <td id="totalBottom">0</td>
-                                <td id="totalLeft">0</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                <table class="history-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>VÁN</th>
+                            <th>THỜI GIAN</th>
+                            <th id="colTop">-</th>
+                            <th id="colRight">-</th>
+                            <th id="colBottom">-</th>
+                            <th id="colLeft">-</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="2">TỔNG</td>
+                            <td id="totalTop">0</td>
+                            <td id="totalRight">0</td>
+                            <td id="totalBottom">0</td>
+                            <td id="totalLeft">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
 
-        <!-- Modal xác nhận điểm -->
+        <!-- Confirm Modal -->
         <div class="confirm-modal" id="confirmModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2><i class="fas fa-check-circle"></i> XÁC NHẬN ĐIỂM</h2>
+                    <h2>XÁC NHẬN ĐIỂM</h2>
                     <button class="modal-close" id="closeModal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="score-instruction">
-                        <i class="fas fa-info-circle"></i> Nhập điểm thủ công. Điểm phạt nhập tuỳ ý.
-                    </div>
                     <div class="score-review">
                         <div class="review-item" data-position="top">
                             <div class="review-name" id="reviewNameTop">-</div>
-                            <div class="review-input-group">
-                                <div class="review-expected" id="expectedTop">Mặc định: 0</div>
-                                <input type="number" class="score-input-modal" data-position="top" value="0" min="-100" max="100">
-                            </div>
+                            <input type="number" class="score-input-modal" data-position="top" value="0" min="-100" max="100">
                         </div>
                         <div class="review-item" data-position="right">
                             <div class="review-name" id="reviewNameRight">-</div>
-                            <div class="review-input-group">
-                                <div class="review-expected" id="expectedRight">Mặc định: 0</div>
-                                <input type="number" class="score-input-modal" data-position="right" value="0" min="-100" max="100">
-                            </div>
+                            <input type="number" class="score-input-modal" data-position="right" value="0" min="-100" max="100">
                         </div>
                         <div class="review-item" data-position="bottom">
                             <div class="review-name" id="reviewNameBottom">-</div>
-                            <div class="review-input-group">
-                                <div class="review-expected" id="expectedBottom">Mặc định: 0</div>
-                                <input type="number" class="score-input-modal" data-position="bottom" value="0" min="-100" max="100">
-                            </div>
+                            <input type="number" class="score-input-modal" data-position="bottom" value="0" min="-100" max="100">
                         </div>
                         <div class="review-item" data-position="left">
                             <div class="review-name" id="reviewNameLeft">-</div>
-                            <div class="review-input-group">
-                                <div class="review-expected" id="expectedLeft">Mặc định: 0</div>
-                                <input type="number" class="score-input-modal" data-position="left" value="0" min="-100" max="100">
-                            </div>
+                            <input type="number" class="score-input-modal" data-position="left" value="0" min="-100" max="100">
                         </div>
                     </div>
                     <div class="modal-actions">
                         <button id="autoFillBtn" class="modal-btn info">
-                            <i class="fas fa-magic"></i> ĐIỀN TỰ ĐỘNG
+                            <i class="fas fa-magic"></i> TỰ ĐỘNG
                         </button>
                         <button id="confirmSave" class="modal-btn success">
-                            <i class="fas fa-save"></i> LƯU VÁN
+                            <i class="fas fa-check"></i> LƯU
                         </button>
                         <button id="cancelConfirm" class="modal-btn danger">
-                            <i class="fas fa-times"></i> ĐÓNG
+                            <i class="fas fa-times"></i> HỦY
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal nhập tên -->
+        <!-- Setup Modal -->
         <div class="setup-modal active" id="setupModal">
             <div class="setup-content">
-                <div class="setup-header">
-                    <h2><i class="fas fa-user-edit"></i> NHẬP TÊN</h2>
-                </div>
                 <div class="setup-body">
-                    <p class="setup-description">Nhập tên 4 người chơi</p>
+                    <h2>NHẬP TÊN NGƯỜI CHƠI</h2>
                     <div class="setup-inputs">
                         <div class="setup-input-group">
-                            <label for="setupTop"><i class="fas fa-arrow-up"></i> TRÊN</label>
-                            <input type="text" id="setupTop" placeholder="Tên" maxlength="8">
+                            <input type="text" id="setupTop" placeholder="TRÊN" maxlength="8">
                         </div>
                         <div class="setup-input-group">
-                            <label for="setupRight"><i class="fas fa-arrow-right"></i> PHẢI</label>
-                            <input type="text" id="setupRight" placeholder="Tên" maxlength="8">
+                            <input type="text" id="setupRight" placeholder="PHẢI" maxlength="8">
                         </div>
                         <div class="setup-input-group">
-                            <label for="setupBottom"><i class="fas fa-arrow-down"></i> DƯỚI</label>
-                            <input type="text" id="setupBottom" placeholder="Tên" maxlength="8">
+                            <input type="text" id="setupBottom" placeholder="DƯỚI" maxlength="8">
                         </div>
                         <div class="setup-input-group">
-                            <label for="setupLeft"><i class="fas fa-arrow-left"></i> TRÁI</label>
-                            <input type="text" id="setupLeft" placeholder="Tên" maxlength="8">
+                            <input type="text" id="setupLeft" placeholder="TRÁI" maxlength="8">
                         </div>
                     </div>
                     <button id="startGame" class="setup-btn">
-                        <i class="fas fa-dice"></i> BẮT ĐẦU
+                        <i class="fas fa-play"></i> BẮT ĐẦU
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Thông báo -->
+        <!-- Notification -->
         <div class="notification" id="notification"></div>
     </div>
 
