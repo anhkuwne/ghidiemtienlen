@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TIẾN LÊN</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,7 +12,7 @@
         <!-- Header -->
         <header class="casino-header">
             <div class="casino-logo">
-                <i class="fas fa-cards"></i>
+                <i class="fas fa-spade"></i>
                 <h1>TIẾN LÊN</h1>
                 <div class="author">Tác giả: <span class="author-name">Cư</span></div>
             </div>
@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <!-- Game Area -->
+        <!-- Game Area - Điều chỉnh để không chồng nhau -->
         <div class="game-area">
             <!-- Center Table -->
             <div class="center-table">
@@ -51,47 +51,47 @@
                 </div>
             </div>
 
-            <!-- 4 Players -->
+            <!-- 4 Players - Điều chỉnh vị trí cao hơn -->
             <div class="table-position top-position" data-position="top">
                 <div class="player-spot" id="spotTop">
-                    <div class="player-chip" data-position="top">
-                        <div class="chip-name" id="nameTop">TRÊN</div>
-                        <div class="chip-score" id="currentScoreTop">0</div>
+                    <div class="player-square" data-position="top">
+                        <div class="square-name" id="nameTop">TRÊN</div>
+                        <div class="square-score" id="currentScoreTop">0</div>
                     </div>
                 </div>
             </div>
 
             <div class="table-position right-position" data-position="right">
                 <div class="player-spot" id="spotRight">
-                    <div class="player-chip" data-position="right">
-                        <div class="chip-name" id="nameRight">PHẢI</div>
-                        <div class="chip-score" id="currentScoreRight">0</div>
+                    <div class="player-square" data-position="right">
+                        <div class="square-name" id="nameRight">PHẢI</div>
+                        <div class="square-score" id="currentScoreRight">0</div>
                     </div>
                 </div>
             </div>
 
             <div class="table-position bottom-position" data-position="bottom">
                 <div class="player-spot" id="spotBottom">
-                    <div class="player-chip" data-position="bottom">
-                        <div class="chip-name" id="nameBottom">DƯỚI</div>
-                        <div class="chip-score" id="currentScoreBottom">0</div>
+                    <div class="player-square" data-position="bottom">
+                        <div class="square-name" id="nameBottom">DƯỚI</div>
+                        <div class="square-score" id="currentScoreBottom">0</div>
                     </div>
                 </div>
             </div>
 
             <div class="table-position left-position" data-position="left">
                 <div class="player-spot" id="spotLeft">
-                    <div class="player-chip" data-position="left">
-                        <div class="chip-name" id="nameLeft">TRÁI</div>
-                        <div class="chip-score" id="currentScoreLeft">0</div>
+                    <div class="player-square" data-position="left">
+                        <div class="square-name" id="nameLeft">TRÁI</div>
+                        <div class="square-score" id="currentScoreLeft">0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Action Buttons -->
+            <!-- Action Buttons - Điều chỉnh vị trí -->
             <div class="action-buttons">
                 <button id="startRound" class="action-btn primary">
-                    <i class="fas fa-play"></i> BẮT ĐẦU
+                    <i class="fas fa-play"></i> VÁN MỚI
                 </button>
                 <button id="undoRound" class="action-btn warning">
                     <i class="fas fa-undo"></i> HOÀN TÁC
@@ -99,10 +99,14 @@
                 <button id="showHistory" class="action-btn info">
                     <i class="fas fa-history"></i> LỊCH SỬ
                 </button>
-                <button id="resetGame" class="action-btn danger">
-                    <i class="fas fa-trash"></i> XÓA
-                </button>
             </div>
+        </div>
+
+        <!-- Reset Button riêng để không vướng -->
+        <div class="reset-container">
+            <button id="resetGame" class="action-btn danger">
+                <i class="fas fa-trash"></i> XÓA HẾT
+            </button>
         </div>
 
         <!-- History Panel -->
@@ -118,11 +122,12 @@
                     <thead>
                         <tr>
                             <th>VÁN</th>
-                            <th>THỜI GIAN</th>
+                            <th>TG</th>
                             <th id="colTop">-</th>
                             <th id="colRight">-</th>
                             <th id="colBottom">-</th>
                             <th id="colLeft">-</th>
+                            <th>SỬA</th>
                         </tr>
                     </thead>
                     <tbody id="historyBody"></tbody>
@@ -133,6 +138,7 @@
                             <td id="totalRight">0</td>
                             <td id="totalBottom">0</td>
                             <td id="totalLeft">0</td>
+                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -143,7 +149,7 @@
         <div class="confirm-modal" id="confirmModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>XÁC NHẬN ĐIỂM</h2>
+                    <h2 id="modalTitle">XÁC NHẬN ĐIỂM</h2>
                     <button class="modal-close" id="closeModal">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -172,9 +178,6 @@
                         <button id="confirmSave" class="modal-btn success">
                             <i class="fas fa-check"></i> LƯU
                         </button>
-                        <button id="cancelConfirm" class="modal-btn danger">
-                            <i class="fas fa-times"></i> HỦY
-                        </button>
                     </div>
                 </div>
             </div>
@@ -187,16 +190,16 @@
                     <h2>NHẬP TÊN NGƯỜI CHƠI</h2>
                     <div class="setup-inputs">
                         <div class="setup-input-group">
-                            <input type="text" id="setupTop" placeholder="TRÊN" maxlength="8">
+                            <input type="text" id="setupTop" placeholder="Tên người trên" maxlength="8">
                         </div>
                         <div class="setup-input-group">
-                            <input type="text" id="setupRight" placeholder="PHẢI" maxlength="8">
+                            <input type="text" id="setupRight" placeholder="Tên người phải" maxlength="8">
                         </div>
                         <div class="setup-input-group">
-                            <input type="text" id="setupBottom" placeholder="DƯỚI" maxlength="8">
+                            <input type="text" id="setupBottom" placeholder="Tên người dưới" maxlength="8">
                         </div>
                         <div class="setup-input-group">
-                            <input type="text" id="setupLeft" placeholder="TRÁI" maxlength="8">
+                            <input type="text" id="setupLeft" placeholder="Tên người trái" maxlength="8">
                         </div>
                     </div>
                     <button id="startGame" class="setup-btn">
@@ -208,6 +211,11 @@
 
         <!-- Notification -->
         <div class="notification" id="notification"></div>
+
+        <!-- Audio Elements -->
+        <audio id="clickSound" preload="auto"></audio>
+        <audio id="confirmSound" preload="auto"></audio>
+        <audio id="saveSound" preload="auto"></audio>
     </div>
 
     <script src="script.js"></script>

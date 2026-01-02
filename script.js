@@ -1,6 +1,6 @@
 // ============================
 // TIẾN LÊN SCORE SYSTEM
-// Minimalist Version
+// Phiên bản hoàn chỉnh
 // Tác giả: Cư
 // ============================
 
@@ -18,6 +18,8 @@ class ScoreSystem {
         this.roundInProgress = false;
         this.selectedRanks = [];
         this.timer = { seconds: 0, interval: null, running: false };
+        this.editingRoundId = null; // ID của ván đang sửa
+        this.soundEnabled = true;
         
         this.rankPoints = { 1: 3, 2: 2, 3: 1, 4: 0 };
         this.positions = ['top', 'right', 'bottom', 'left'];
@@ -28,34 +30,111 @@ class ScoreSystem {
     init() {
         this.loadFromLocalStorage();
         this.bindEvents();
+        this.initSounds();
         this.updateAllDisplays();
+    }
+    
+    initSounds() {
+        // Tạo audio context cho âm thanh
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Tạo các âm thanh đơn giản
+        this.sounds = {
+            click: this.createSound(800, 0.1, 'sine'),
+            confirm: this.createSound(1200, 0.2, 'sine'),
+            save: this.createSound(1500, 0.3, 'sine'),
+            error: this.createSound(300, 0.3, 'square')
+        };
+    }
+    
+    createSound(freq, duration, type) {
+        return () => {
+            if (!this.soundEnabled) return;
+            
+            try {
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            } catch (e) {
+                console.log("Audio not supported");
+            }
+        };
+    }
+    
+    playSound(type) {
+        if (this.sounds[type]) {
+            this.sounds[type]();
+        }
     }
     
     bindEvents() {
         // Setup
-        document.getElementById('startGame').addEventListener('click', () => this.startGameSetup());
+        document.getElementById('startGame').addEventListener('click', () => {
+            this.playSound('click');
+            this.startGameSetup();
+        });
         
-        // Player chips click
+        // Player squares click
         this.positions.forEach(pos => {
-            const chip = document.querySelector(`.player-chip[data-position="${pos}"]`);
-            chip.addEventListener('click', () => this.selectPlayer(pos));
-            chip.addEventListener('dblclick', () => this.deselectPlayer(pos));
+            const square = document.querySelector(`.player-square[data-position="${pos}"]`);
+            square.addEventListener('click', () => {
+                this.playSound('click');
+                this.selectPlayer(pos);
+            });
+            square.addEventListener('dblclick', () => {
+                this.playSound('click');
+                this.deselectPlayer(pos);
+            });
         });
         
         // Action buttons
-        document.getElementById('startRound').addEventListener('click', () => this.startNewRound());
-        document.getElementById('undoRound').addEventListener('click', () => this.undoLastRound());
-        document.getElementById('showHistory').addEventListener('click', () => this.toggleHistoryPanel());
-        document.getElementById('resetGame').addEventListener('click', () => this.resetGame());
+        document.getElementById('startRound').addEventListener('click', () => {
+            this.playSound('click');
+            this.startNewRound();
+        });
+        document.getElementById('undoRound').addEventListener('click', () => {
+            this.playSound('click');
+            this.undoLastRound();
+        });
+        document.getElementById('showHistory').addEventListener('click', () => {
+            this.playSound('click');
+            this.toggleHistoryPanel();
+        });
+        document.getElementById('resetGame').addEventListener('click', () => {
+            this.playSound('click');
+            this.resetGame();
+        });
         
         // Panel toggle
-        document.getElementById('togglePanel').addEventListener('click', () => this.toggleHistoryPanel());
+        document.getElementById('togglePanel').addEventListener('click', () => {
+            this.playSound('click');
+            this.toggleHistoryPanel();
+        });
         
         // Modal controls
-        document.getElementById('closeModal').addEventListener('click', () => this.hideConfirmModal());
-        document.getElementById('confirmSave').addEventListener('click', () => this.saveRound());
-        document.getElementById('cancelConfirm').addEventListener('click', () => this.hideConfirmModal());
-        document.getElementById('autoFillBtn').addEventListener('click', () => this.autoFillScores());
+        document.getElementById('closeModal').addEventListener('click', () => {
+            this.playSound('click');
+            this.hideConfirmModal();
+        });
+        document.getElementById('confirmSave').addEventListener('click', () => {
+            this.playSound('save');
+            this.saveRound();
+        });
+        document.getElementById('autoFillBtn').addEventListener('click', () => {
+            this.playSound('confirm');
+            this.autoFillScores();
+        });
         
         // Modal input change
         document.querySelectorAll('.score-input-modal').forEach(input => {
@@ -127,6 +206,7 @@ class ScoreSystem {
         
         this.roundInProgress = true;
         this.selectedRanks = [];
+        this.editingRoundId = null;
         
         // Reset current round points
         this.positions.forEach(pos => {
@@ -135,6 +215,7 @@ class ScoreSystem {
         
         // Update UI
         this.updateAllDisplays();
+        this.resetSquares();
         
         this.showNotification(`🎯 Ván ${this.currentRound} đã bắt đầu!`, 'info');
     }
@@ -145,10 +226,10 @@ class ScoreSystem {
             return;
         }
         
-        const playerChip = document.querySelector(`.player-chip[data-position="${position}"]`);
+        const playerSquare = document.querySelector(`.player-square[data-position="${position}"]`);
         
         // If already selected, deselect
-        if (playerChip.classList.contains('selected')) {
+        if (playerSquare.classList.contains('selected')) {
             this.deselectPlayer(position);
             return;
         }
@@ -170,7 +251,7 @@ class ScoreSystem {
         this.players[position].currentRound = points;
         
         // Update UI
-        playerChip.classList.add('selected');
+        playerSquare.classList.add('selected');
         this.updateAllDisplays();
         
         // Check if ready for confirmation
@@ -191,7 +272,10 @@ class ScoreSystem {
                 this.updateAllDisplays();
                 
                 // Auto-show confirm modal
-                setTimeout(() => this.showConfirmModal(), 500);
+                setTimeout(() => {
+                    this.showConfirmModal();
+                    this.playSound('confirm');
+                }, 500);
             }
         }
     }
@@ -210,7 +294,7 @@ class ScoreSystem {
         this.players[position].currentRound = 0;
         
         // Update UI
-        document.querySelector(`.player-chip[data-position="${position}"]`).classList.remove('selected');
+        document.querySelector(`.player-square[data-position="${position}"]`).classList.remove('selected');
         
         // Reassign ranks to remaining selected players
         this.selectedRanks.sort((a, b) => a.rank - b.rank);
@@ -224,8 +308,18 @@ class ScoreSystem {
         this.updateAllDisplays();
     }
     
+    resetSquares() {
+        this.positions.forEach(pos => {
+            document.querySelector(`.player-square[data-position="${pos}"]`).classList.remove('selected');
+        });
+    }
+    
     showConfirmModal() {
-        if (!this.roundInProgress) return;
+        if (!this.roundInProgress && !this.editingRoundId) return;
+        
+        // Set modal title
+        const modalTitle = document.getElementById('modalTitle');
+        modalTitle.textContent = this.editingRoundId ? 'SỬA ĐIỂM VÁN' : 'XÁC NHẬN ĐIỂM';
         
         // Update modal with current selections
         this.positions.forEach(pos => {
@@ -238,7 +332,7 @@ class ScoreSystem {
             if (selection) {
                 inputElement.value = selection.points;
             } else {
-                inputElement.value = 0;
+                inputElement.value = this.players[pos].currentRound || 0;
             }
         });
         
@@ -247,6 +341,7 @@ class ScoreSystem {
     
     hideConfirmModal() {
         document.getElementById('confirmModal').classList.remove('active');
+        this.editingRoundId = null;
     }
     
     handleManualInput(event) {
@@ -275,28 +370,59 @@ class ScoreSystem {
     saveRound() {
         // Get scores from inputs
         const inputs = document.querySelectorAll('.score-input-modal');
+        let hasError = false;
         
-        // Calculate totals from modal inputs
+        // Validate inputs
         inputs.forEach(input => {
-            const position = input.dataset.position;
-            const points = parseInt(input.value) || 0;
-            
-            this.players[position].total += points;
-            this.players[position].currentRound = points;
+            const value = parseInt(input.value);
+            if (isNaN(value)) {
+                hasError = true;
+                input.style.borderColor = '#e53e3e';
+            } else {
+                input.style.borderColor = '#4299e1';
+            }
         });
         
-        // Add to history
+        if (hasError) {
+            this.showNotification('❌ Vui lòng nhập số hợp lệ!', 'error');
+            this.playSound('error');
+            return;
+        }
+        
+        if (this.editingRoundId) {
+            // Edit existing round
+            this.updateRound();
+        } else {
+            // Save new round
+            this.createNewRound();
+        }
+        
+        this.hideConfirmModal();
+    }
+    
+    createNewRound() {
+        // Create round data
         const roundData = {
+            id: Date.now(),
             round: this.currentRound,
-            duration: this.formatTime(this.getRoundDuration()),
+            duration: this.getRoundDuration(),
             scores: {},
             ranks: {}
         };
         
-        this.positions.forEach(pos => {
-            roundData.scores[pos] = this.players[pos].currentRound;
-            const selection = this.selectedRanks.find(s => s.position === pos);
-            roundData.ranks[pos] = selection ? selection.rank : 4;
+        // Get scores from inputs
+        const inputs = document.querySelectorAll('.score-input-modal');
+        inputs.forEach(input => {
+            const position = input.dataset.position;
+            const points = parseInt(input.value) || 0;
+            
+            roundData.scores[position] = points;
+            this.players[position].total += points;
+            this.players[position].currentRound = points;
+            
+            // Find rank for this position
+            const selection = this.selectedRanks.find(s => s.position === position);
+            roundData.ranks[position] = selection ? selection.rank : 4;
         });
         
         this.gameHistory.unshift(roundData);
@@ -308,17 +434,91 @@ class ScoreSystem {
         
         // Update UI
         this.updateAllDisplays();
-        this.hideConfirmModal();
         this.addHistoryRow(roundData);
         
         this.showNotification(`✅ Ván ${roundData.round} đã lưu!`, 'success');
         this.saveToLocalStorage();
     }
     
+    updateRound() {
+        // Find the round being edited
+        const roundIndex = this.gameHistory.findIndex(round => round.id === this.editingRoundId);
+        if (roundIndex === -1) return;
+        
+        const oldRound = this.gameHistory[roundIndex];
+        
+        // Create updated round data
+        const updatedRound = {
+            ...oldRound,
+            scores: {},
+            ranks: {}
+        };
+        
+        // Get scores from inputs and update totals
+        const inputs = document.querySelectorAll('.score-input-modal');
+        
+        // First, subtract old scores from totals
+        this.positions.forEach(pos => {
+            this.players[pos].total -= oldRound.scores[pos];
+        });
+        
+        // Then add new scores
+        inputs.forEach(input => {
+            const position = input.dataset.position;
+            const points = parseInt(input.value) || 0;
+            
+            updatedRound.scores[position] = points;
+            this.players[position].total += points;
+            
+            // Update rank
+            const selection = this.selectedRanks.find(s => s.position === position);
+            updatedRound.ranks[position] = selection ? selection.rank : 4;
+        });
+        
+        // Update the round in history
+        this.gameHistory[roundIndex] = updatedRound;
+        
+        // Update UI
+        this.updateAllDisplays();
+        this.updateHistoryRow(roundIndex, updatedRound);
+        
+        this.showNotification('✅ Đã cập nhật điểm!', 'success');
+        this.saveToLocalStorage();
+    }
+    
     getRoundDuration() {
-        // Simple duration - 30 seconds per round for demo
-        // In real app, you'd track actual time
-        return 30;
+        // Simple duration calculation
+        return '30s'; // Thời gian mặc định
+    }
+    
+    editRound(roundId) {
+        const round = this.gameHistory.find(r => r.id === roundId);
+        if (!round) return;
+        
+        this.editingRoundId = roundId;
+        
+        // Load round data into players for editing
+        this.positions.forEach(pos => {
+            this.players[pos].currentRound = round.scores[pos];
+        });
+        
+        // Recreate selected ranks for display
+        this.selectedRanks = [];
+        const rankEntries = Object.entries(round.ranks);
+        rankEntries.sort((a, b) => a[1] - b[1]);
+        
+        rankEntries.forEach(([position, rank]) => {
+            if (rank <= 3) {
+                this.selectedRanks.push({
+                    position,
+                    rank,
+                    points: this.rankPoints[rank]
+                });
+                document.querySelector(`.player-square[data-position="${position}"]`).classList.add('selected');
+            }
+        });
+        
+        this.showConfirmModal();
     }
     
     undoLastRound() {
@@ -359,6 +559,7 @@ class ScoreSystem {
         this.currentRound = 1;
         this.roundInProgress = false;
         this.selectedRanks = [];
+        this.editingRoundId = null;
         this.resetTimer();
         
         // Clear UI
@@ -409,20 +610,6 @@ class ScoreSystem {
             `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
     
-    formatTime(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        
-        if (hours > 0) {
-            return `${hours}h${minutes}m`;
-        } else if (minutes > 0) {
-            return `${minutes}m`;
-        } else {
-            return `${secs}s`;
-        }
-    }
-    
     // ============================
     // UI UPDATES
     // ============================
@@ -471,8 +658,44 @@ class ScoreSystem {
     addHistoryRow(roundData) {
         const tbody = document.getElementById('historyBody');
         const row = document.createElement('tr');
+        row.dataset.id = roundData.id;
         
-        row.innerHTML = `
+        row.innerHTML = this.getHistoryRowHTML(roundData);
+        
+        tbody.insertBefore(row, tbody.firstChild);
+        
+        // Add event listener to edit button
+        row.querySelector('.edit-history-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const roundId = parseInt(row.dataset.id);
+            this.editRound(roundId);
+        });
+        
+        // Update totals
+        this.updateTotals();
+    }
+    
+    updateHistoryRow(index, roundData) {
+        const tbody = document.getElementById('historyBody');
+        const row = tbody.children[index];
+        
+        if (row) {
+            row.outerHTML = this.getHistoryRowHTML(roundData);
+            
+            // Re-add event listener
+            const newRow = tbody.children[index];
+            newRow.querySelector('.edit-history-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const roundId = parseInt(newRow.dataset.id);
+                this.editRound(roundId);
+            });
+        }
+        
+        this.updateTotals();
+    }
+    
+    getHistoryRowHTML(roundData) {
+        return `
             <td><strong>${roundData.round}</strong></td>
             <td>${roundData.duration}</td>
             <td class="${roundData.ranks.top === 1 ? 'first' : roundData.ranks.top === 2 ? 'second' : roundData.ranks.top === 3 ? 'third' : ''}">
@@ -487,12 +710,12 @@ class ScoreSystem {
             <td class="${roundData.ranks.left === 1 ? 'first' : roundData.ranks.left === 2 ? 'second' : roundData.ranks.left === 3 ? 'third' : ''}">
                 ${roundData.scores.left}
             </td>
+            <td class="edit-cell">
+                <button class="edit-history-btn" data-id="${roundData.id}">
+                    <i class="fas fa-edit"></i> Sửa
+                </button>
+            </td>
         `;
-        
-        tbody.insertBefore(row, tbody.firstChild);
-        
-        // Update totals
-        this.updateTotals();
     }
     
     removeHistoryRow(index) {
@@ -519,13 +742,15 @@ class ScoreSystem {
         const icons = {
             success: 'fas fa-check-circle',
             warning: 'fas fa-exclamation-triangle',
-            info: 'fas fa-info-circle'
+            info: 'fas fa-info-circle',
+            error: 'fas fa-times-circle'
         };
         
         const colors = {
             success: 'linear-gradient(135deg, #48bb78, #38a169)',
             warning: 'linear-gradient(135deg, #ed8936, #dd6b20)',
-            info: 'linear-gradient(135deg, #4299e1, #3182ce)'
+            info: 'linear-gradient(135deg, #4299e1, #3182ce)',
+            error: 'linear-gradient(135deg, #f56565, #e53e3e)'
         };
         
         notification.innerHTML = `
@@ -552,6 +777,7 @@ class ScoreSystem {
             currentRound: this.currentRound,
             roundInProgress: this.roundInProgress,
             selectedRanks: this.selectedRanks,
+            editingRoundId: this.editingRoundId,
             timer: this.timer
         };
         
@@ -570,6 +796,7 @@ class ScoreSystem {
             this.currentRound = data.currentRound || 1;
             this.roundInProgress = data.roundInProgress || false;
             this.selectedRanks = data.selectedRanks || [];
+            this.editingRoundId = data.editingRoundId || null;
             this.timer = data.timer || { seconds: 0, interval: null, running: false };
             
             // Update player names in UI
@@ -591,7 +818,7 @@ class ScoreSystem {
             // If round was in progress, restore selections
             if (this.roundInProgress) {
                 this.selectedRanks.forEach(selection => {
-                    document.querySelector(`.player-chip[data-position="${selection.position}"]`).classList.add('selected');
+                    document.querySelector(`.player-square[data-position="${selection.position}"]`).classList.add('selected');
                 });
             }
             
