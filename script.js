@@ -1,7 +1,7 @@
 // ============================
-// CASINO BÀI LIÊNG SCORE SYSTEM
-// Phong cách bài bạc cao cấp
+// CASINO TIẾN LÊN SCORE SYSTEM
 // Tác giả: Cư
+// Mobile Optimized
 // ============================
 
 class CasinoScoreSystem {
@@ -29,11 +29,6 @@ class CasinoScoreSystem {
         this.loadFromLocalStorage();
         this.bindEvents();
         this.updateAllDisplays();
-        
-        // Auto-start timer if game in progress
-        if (this.roundInProgress) {
-            this.startTimer();
-        }
     }
     
     bindEvents() {
@@ -71,7 +66,6 @@ class CasinoScoreSystem {
         // Modal input change
         document.querySelectorAll('.score-input-modal').forEach(input => {
             input.addEventListener('input', (e) => this.handleManualInput(e));
-            input.addEventListener('change', (e) => this.handleManualInput(e));
         });
         
         // Enter key to start game
@@ -104,13 +98,10 @@ class CasinoScoreSystem {
         
         // Update UI
         this.positions.forEach(pos => {
-            document.getElementById(`name${this.capitalize(pos)}`).textContent = names[pos];
-            document.getElementById(`summary${this.capitalize(pos)}`).querySelector('.summary-name').textContent = names[pos];
-        });
-        
-        // Update table headers
-        this.positions.forEach(pos => {
-            document.getElementById(`col${this.capitalize(pos)}`).textContent = names[pos];
+            const shortName = this.truncateName(names[pos], 6);
+            document.getElementById(`name${this.capitalize(pos)}`).textContent = shortName;
+            document.querySelector(`#summary${this.capitalize(pos)} .summary-name`).textContent = shortName;
+            document.getElementById(`col${this.capitalize(pos)}`).textContent = shortName;
         });
         
         // Hide setup modal
@@ -119,8 +110,13 @@ class CasinoScoreSystem {
         // Start first round
         this.startNewRound();
         
-        this.showNotification('🎰 Game đã bắt đầu! Chọn người nhất, nhì, ba.', 'success');
+        this.showNotification('🎮 Game đã bắt đầu!', 'success');
         this.saveToLocalStorage();
+    }
+    
+    truncateName(name, maxLength) {
+        if (name.length <= maxLength) return name;
+        return name.substring(0, maxLength - 1) + '…';
     }
     
     // ============================
@@ -148,7 +144,7 @@ class CasinoScoreSystem {
         // Start timer
         this.startTimer();
         
-        this.showNotification(`🎮 Ván ${this.currentRound} đã bắt đầu!`, 'info');
+        this.showNotification(`🎯 Ván ${this.currentRound} đã bắt đầu!`, 'info');
     }
     
     selectPlayer(position) {
@@ -186,9 +182,6 @@ class CasinoScoreSystem {
         this.updateRankIndicator(position, rank, true);
         this.updateAllDisplays();
         
-        // Play sound effect
-        this.playSound('select');
-        
         // Check if ready for confirmation
         if (this.selectedRanks.length === 3) {
             // Auto-select the last player as 4th rank
@@ -208,13 +201,8 @@ class CasinoScoreSystem {
                 this.updateAllDisplays();
                 
                 // Auto-show confirm modal
-                setTimeout(() => {
-                    this.showNotification('✅ Đã chọn đủ 4 hạng!', 'success');
-                    this.showConfirmModal();
-                }, 800);
+                setTimeout(() => this.showConfirmModal(), 500);
             }
-        } else {
-            this.showNotification(`🎯 Chọn ${this.getRankName(rank)}: ${this.players[position].name}`, 'success');
         }
     }
     
@@ -248,7 +236,6 @@ class CasinoScoreSystem {
         });
         
         this.updateAllDisplays();
-        this.showNotification(`🔄 Đã hủy chọn: ${this.players[position].name}`, 'info');
     }
     
     quickConfirmRound() {
@@ -274,7 +261,7 @@ class CasinoScoreSystem {
             if (selection) {
                 inputElement.value = selection.points;
                 document.getElementById(`expected${this.capitalize(pos)}`).textContent = 
-                    `Mặc định: ${selection.points} (${this.getRankName(selection.rank)})`;
+                    `Mặc định: ${selection.points}`;
             } else {
                 inputElement.value = 0;
                 document.getElementById(`expected${this.capitalize(pos)}`).textContent = 'Mặc định: 0';
@@ -282,12 +269,10 @@ class CasinoScoreSystem {
         });
         
         document.getElementById('confirmModal').classList.add('active');
-        this.playSound('modalOpen');
     }
     
     hideConfirmModal() {
         document.getElementById('confirmModal').classList.remove('active');
-        this.playSound('modalClose');
     }
     
     handleManualInput(event) {
@@ -300,19 +285,6 @@ class CasinoScoreSystem {
         
         // Update in-memory
         this.players[position].currentRound = parseInt(event.target.value) || 0;
-        
-        // Update expected text
-        const selection = this.selectedRanks.find(s => s.position === position);
-        if (selection) {
-            const currentValue = parseInt(event.target.value) || 0;
-            if (currentValue === selection.points) {
-                document.getElementById(`expected${this.capitalize(position)}`).textContent = 
-                    `Mặc định: ${selection.points} (${this.getRankName(selection.rank)})`;
-            } else {
-                document.getElementById(`expected${this.capitalize(position)}`).textContent = 
-                    `Đã thay đổi: ${currentValue}`;
-            }
-        }
     }
     
     autoFillScores() {
@@ -323,33 +295,15 @@ class CasinoScoreSystem {
             this.players[selection.position].currentRound = selection.points;
             
             document.getElementById(`expected${this.capitalize(selection.position)}`).textContent = 
-                `Mặc định: ${selection.points} (${this.getRankName(selection.rank)})`;
+                `Mặc định: ${selection.points}`;
         });
         
-        this.showNotification('✨ Đã điền điểm tự động theo hạng!', 'success');
-        this.playSound('autoFill');
+        this.showNotification('✨ Đã điền điểm tự động!', 'success');
     }
     
     saveRound() {
         // Get scores from inputs
         const inputs = document.querySelectorAll('.score-input-modal');
-        let isValid = true;
-        
-        // Validate inputs
-        inputs.forEach(input => {
-            const value = parseInt(input.value);
-            if (isNaN(value)) {
-                isValid = false;
-                input.style.borderColor = '#e74c3c';
-            } else {
-                input.style.borderColor = '#FFD700';
-            }
-        });
-        
-        if (!isValid) {
-            this.showNotification('❌ Vui lòng nhập điểm hợp lệ cho tất cả người chơi!', 'error');
-            return;
-        }
         
         // Calculate totals from modal inputs
         inputs.forEach(input => {
@@ -388,8 +342,7 @@ class CasinoScoreSystem {
         this.hideConfirmModal();
         this.addHistoryRow(roundData);
         
-        this.showNotification(`✅ Ván ${roundData.round} đã lưu thành công!`, 'success');
-        this.playSound('save');
+        this.showNotification(`✅ Ván ${roundData.round} đã lưu!`, 'success');
         this.saveToLocalStorage();
     }
     
@@ -399,7 +352,7 @@ class CasinoScoreSystem {
             return;
         }
         
-        if (!confirm('Bạn có chắc chắn muốn hoàn tác ván vừa rồi?')) return;
+        if (!confirm('Hoàn tác ván vừa rồi?')) return;
         
         const lastRound = this.gameHistory[0];
         
@@ -417,13 +370,12 @@ class CasinoScoreSystem {
         this.updateAllDisplays();
         this.removeHistoryRow(0);
         
-        this.showNotification('↩️ Đã hoàn tác ván trước!', 'info');
-        this.playSound('undo');
+        this.showNotification('↩️ Đã hoàn tác!', 'info');
         this.saveToLocalStorage();
     }
     
     resetGame() {
-        if (!confirm('⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa tất cả dữ liệu?\nHành động này không thể hoàn tác!')) return;
+        if (!confirm('⚠️ XÓA TẤT CẢ DỮ LIỆU?\nHành động này không thể hoàn tác!')) return;
         
         this.positions.forEach(pos => {
             this.players[pos] = { name: '', total: 0, currentRound: 0, ranks: [] };
@@ -443,8 +395,7 @@ class CasinoScoreSystem {
         // Show setup modal
         document.getElementById('setupModal').classList.add('active');
         
-        this.showNotification('🗑️ Đã xóa tất cả dữ liệu!', 'info');
-        this.playSound('reset');
+        this.showNotification('🗑️ Đã xóa tất cả!', 'info');
         localStorage.clear();
     }
     
@@ -490,9 +441,9 @@ class CasinoScoreSystem {
         const secs = seconds % 60;
         
         if (hours > 0) {
-            return `${hours}h${minutes.toString().padStart(2, '0')}m`;
+            return `${hours}h${minutes}m`;
         } else if (minutes > 0) {
-            return `${minutes}m${secs.toString().padStart(2, '0')}s`;
+            return `${minutes}m${secs}s`;
         } else {
             return `${secs}s`;
         }
@@ -539,10 +490,8 @@ class CasinoScoreSystem {
         if (indicator) {
             if (active) {
                 indicator.classList.add('active');
-                indicator.style.animation = 'pulse 1s infinite';
             } else {
                 indicator.classList.remove('active');
-                indicator.style.animation = 'none';
             }
         }
     }
@@ -550,7 +499,6 @@ class CasinoScoreSystem {
     resetRankIndicators() {
         document.querySelectorAll('.rank-indicator').forEach(indicator => {
             indicator.classList.remove('active');
-            indicator.style.animation = 'none';
         });
         
         document.querySelectorAll('.player-chip').forEach(chip => {
@@ -571,11 +519,9 @@ class CasinoScoreSystem {
         if (panel.classList.contains('open')) {
             toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
             toggleBtn.style.transform = 'rotate(180deg)';
-            this.playSound('panelOpen');
         } else {
             toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
             toggleBtn.style.transform = 'rotate(0deg)';
-            this.playSound('panelClose');
         }
     }
     
@@ -652,7 +598,6 @@ class CasinoScoreSystem {
         this.removeHistoryRow(roundIndex);
         
         this.showNotification(`🗑️ Đã xóa ván ${roundNumber}!`, 'info');
-        this.playSound('delete');
         this.saveToLocalStorage();
     }
     
@@ -686,30 +631,7 @@ class CasinoScoreSystem {
         
         setTimeout(() => {
             notification.classList.remove('show');
-        }, 3000);
-    }
-    
-    // ============================
-    // SOUND EFFECTS
-    // ============================
-    
-    playSound(type) {
-        // In a real implementation, you would play actual audio files
-        // For now, we'll just simulate with console log
-        const sounds = {
-            select: '🔔',
-            modalOpen: '🎵',
-            modalClose: '🔇',
-            save: '💾',
-            undo: '↩️',
-            reset: '🗑️',
-            autoFill: '✨',
-            panelOpen: '📊',
-            panelClose: '📥',
-            delete: '🗑️'
-        };
-        
-        console.log(sounds[type] || '🔊');
+        }, 2000);
     }
     
     // ============================
@@ -746,9 +668,10 @@ class CasinoScoreSystem {
             // Update player names in UI
             this.positions.forEach(pos => {
                 if (this.players[pos].name) {
-                    document.getElementById(`name${this.capitalize(pos)}`).textContent = this.players[pos].name;
-                    document.getElementById(`summary${this.capitalize(pos)}`).querySelector('.summary-name').textContent = this.players[pos].name;
-                    document.getElementById(`col${this.capitalize(pos)}`).textContent = this.players[pos].name;
+                    const shortName = this.truncateName(this.players[pos].name, 6);
+                    document.getElementById(`name${this.capitalize(pos)}`).textContent = shortName;
+                    document.querySelector(`#summary${this.capitalize(pos)} .summary-name`).textContent = shortName;
+                    document.getElementById(`col${this.capitalize(pos)}`).textContent = shortName;
                 }
             });
             
@@ -778,11 +701,6 @@ class CasinoScoreSystem {
     
     capitalize(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-    
-    getRankName(rank) {
-        const names = { 1: 'NHẤT', 2: 'NHÌ', 3: 'BA', 4: 'BÉT' };
-        return names[rank] || '';
     }
 }
 
